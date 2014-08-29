@@ -2,6 +2,7 @@
 #include <SDL_image.h>
 
 #include "BirdMain.h"
+#include "Video.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +23,23 @@ int main(int argc, char *argv[])
 
   atexit(IMG_Quit);
 
+  // initialize video
+  if (!VideoInit())
+    {
+      fprintf(stderr, "VideoInit() failed: %s\n", SDL_GetError());
+      return 255;
+    }
 
-  return 0;
+  atexit(VideoDestroy);
+
+  // initialize audio
+  if (!InitSound())
+    {
+      fprintf(stderr, "InitSound() failed: %s\n", SDL_GetError());
+      return 255;
+    }
+
+  atexit(DestroySound);
+
+  return GameMain();
 }
