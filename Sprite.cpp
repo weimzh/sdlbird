@@ -110,7 +110,7 @@ bool CSprite::LoadTxt(const char *szTxtFileName)
       int w, h;
       float x1, y1, x2, y2;
 
-      if (fscanf(fp, "%[^ ] %d %d %f %f %f %f", name, &w, &h, &x1, &y1, &x2, &y2) != 7)
+      if (fscanf(fp, "%s %d %d %f %f %f %f", name, &w, &h, &x1, &y1, &x2, &y2) != 7)
 	{
 	  continue;
 	}

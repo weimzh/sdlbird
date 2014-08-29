@@ -5,7 +5,7 @@ ${TARGET}: ${OBJS}
 	g++ `sdl2-config --libs` -lSDL2_image -o $@ $^
 
 .cpp.o:
-	g++ --std=c++11 `sdl2-config --cflags` -c -o $@ $<
+	g++ --std=c++11 `sdl2-config --cflags` -g -c -o $@ $<
 
 all: ${TARGET}
 
