@@ -10,8 +10,8 @@ bool VideoInit()
   gpWindow = SDL_CreateWindow("Flappy Bird",
 			      SDL_WINDOWPOS_UNDEFINED,
 			      SDL_WINDOWPOS_UNDEFINED,
-			      287,
-			      511,
+			      SCREEN_WIDTH,
+			      SCREEN_HEIGHT,
 			      SDL_WINDOW_SHOWN);
 
   if (gpWindow == NULL)

@@ -20,6 +20,8 @@ typedef enum tagGameState
 static GameState g_GameState = GAMESTATE_INITIAL;
 static bool g_bMouseDown = false;
 static bool g_bNight = false;
+static int g_iMouseX = 0;
+static int g_iMouseY = 0;
 
 static void UpdateEvents()
 {
@@ -35,6 +37,8 @@ static void UpdateEvents()
 
 	case SDL_MOUSEBUTTONDOWN:
 	  g_bMouseDown = true;
+	  g_iMouseX = evt.button.x;
+	  g_iMouseY = evt.button.y;
 	  break;
 
 	case SDL_MOUSEBUTTONUP:
@@ -89,8 +93,8 @@ static void DrawBackground()
   gpSprite->Draw(gpRenderer, g_bNight ? "bg_night" : "bg_day", 0, 0);
 
   unsigned int time = SDL_GetTicks() / 10;
-  gpSprite->Draw(gpRenderer, "land", -(time % 287), 401);
-  gpSprite->Draw(gpRenderer, "land", 287 - (time % 287), 401);
+  gpSprite->Draw(gpRenderer, "land", -(time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", 287 - (time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
 }
 
 static void GameThink_Initial()
@@ -133,7 +137,16 @@ static void GameThink_Initial()
 
   if (g_bMouseDown)
     {
-      fading_start_time = SDL_GetTicks();
+      if (g_iMouseX > 25 && g_iMouseY > 340 && g_iMouseX < 25 + 100 && g_iMouseY < 340 + 55)
+	{
+	  // user clicked "play" button
+	  fading_start_time = SDL_GetTicks();
+	}
+      else if (g_iMouseX > 145 && g_iMouseY > 340 && g_iMouseX < 145 + 100 && g_iMouseY < 340 + 55)
+	{
+	  // user clicked "score" button
+	  // TODO
+	}
     }
 }
 
