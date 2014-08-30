@@ -20,6 +20,8 @@ class CSprite
   virtual ~CSprite();
 
   void                  Draw(SDL_Renderer *pRenderer, const char *szTag, int x, int y);
+  void                  SetAlpha(unsigned char alpha) { SDL_SetTextureAlphaMod(m_pTexture, alpha); }
+  void                  SetColorMod(unsigned char r, unsigned char g, unsigned char b) { SDL_SetTextureColorMod(m_pTexture, r, g, b); }
 
  private:
   void                  Load(SDL_Renderer *pRenderer, const char *szImageFileName, const char *szTxtFileName);

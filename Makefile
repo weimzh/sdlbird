@@ -2,7 +2,7 @@ TARGET = bird
 OBJS = Audio.o BirdGame.o BirdMain.o Sprite.o Video.o
 
 ${TARGET}: ${OBJS}
-	g++ `sdl2-config --libs` -lSDL2_image -o $@ $^
+	g++ `sdl2-config --libs` -lSDL2_image -lm -o $@ $^
 
 .cpp.o:
 	g++ --std=c++11 `sdl2-config --cflags` -g -c -o $@ $<
