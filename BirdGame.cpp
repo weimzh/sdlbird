@@ -7,21 +7,28 @@
 
 #include <algorithm>
 #include <math.h>
+#include <stdlib.h>
+#include <time.h>
 
 static CSprite *gpSprite = NULL;
 
 typedef enum tagGameState
   {
     GAMESTATE_INITIAL = 0,
+    GAMESTATE_GAMESTART,
     GAMESTATE_GAME,
-    GAMESTATE_SCORE,
+    GAMESTATE_GAMEOVER,
   } GameState;
 
 static GameState g_GameState = GAMESTATE_INITIAL;
 static bool g_bMouseDown = false;
 static bool g_bNight = false;
+static int g_iBirdPic = 0;
 static int g_iMouseX = 0;
 static int g_iMouseY = 0;
+static int g_iScore = 0;
+static int g_iBirdVelocity = 0;
+static int g_iBirdHeight = 0;
 
 static void UpdateEvents()
 {
@@ -88,18 +95,68 @@ static void ShowTitle()
   SDL_DestroyTexture(pTextureTitle);
 }
 
-static void DrawBackground()
+static void DrawBackground(bool bStatic)
 {
   gpSprite->Draw(gpRenderer, g_bNight ? "bg_night" : "bg_day", 0, 0);
 
-  unsigned int time = SDL_GetTicks() / 10;
+  static unsigned int time = 0;
+  if (!bStatic)
+    {
+      time++;
+    }
+
   gpSprite->Draw(gpRenderer, "land", -(time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
   gpSprite->Draw(gpRenderer, "land", 287 - (time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+}
+
+static void DrawScore(int score)
+{
+  int iScoreLen = 0;
+  int iBeginX = SCREEN_WIDTH / 2;
+  int iReverseScore = 0;
+
+  do
+    {
+      if (score % 10 == 1)
+	{
+	  iBeginX -= 16 / 2 + 1;
+	}
+      else
+	{
+	  iBeginX -= 24 / 2 + 1;
+	}
+
+      iReverseScore *= 10;
+      iReverseScore += score % 10;
+
+      score /= 10;
+      iScoreLen++;
+    } while (score > 0);
+
+  do
+    {
+      char buf[256];
+      sprintf(buf, "font_%.3d", 48 + (iReverseScore % 10));
+
+      gpSprite->Draw(gpRenderer, buf, iBeginX, 60);
+      if (iReverseScore % 10 == 1)
+	{
+	  iBeginX += 16 + 2;
+	}
+      else
+	{
+	  iBeginX += 24 + 2;
+	}
+      
+      iReverseScore /= 10;
+      iScoreLen--;
+    } while (iReverseScore > 0);
 }
 
 static void GameThink_Initial()
 {
   static unsigned int fading_start_time = 0;
+  static GameState enNextGameState;
 
   if (fading_start_time > 0)
     {
@@ -107,9 +164,11 @@ static void GameThink_Initial()
 
       if (elapsed > 500)
 	{
-	  g_GameState = GAMESTATE_GAME;
+	  g_GameState = enNextGameState;
 	  gpSprite->SetColorMod(255, 255, 255);
 	  fading_start_time = 0;
+	  g_bNight = ((rand() % 2) == 1);
+	  g_iBirdPic = rand() % 3;
 	  return;
 	}
 
@@ -121,7 +180,7 @@ static void GameThink_Initial()
       gpSprite->SetColorMod(elapsed, elapsed, elapsed);
     }
 
-  DrawBackground();
+  DrawBackground(false);
 
   gpSprite->Draw(gpRenderer, "title", 55, 110);
 
@@ -141,6 +200,7 @@ static void GameThink_Initial()
 	{
 	  // user clicked "play" button
 	  fading_start_time = SDL_GetTicks();
+	  enNextGameState = GAMESTATE_GAMESTART;
 	}
       else if (g_iMouseX > 145 && g_iMouseY > 340 && g_iMouseX < 145 + 100 && g_iMouseY < 340 + 55)
 	{
@@ -150,16 +210,65 @@ static void GameThink_Initial()
     }
 }
 
+static void GameThink_GameStart()
+{
+  static unsigned int fading_start_time = 0;
+
+  if (fading_start_time == 0)
+    {
+      fading_start_time = SDL_GetTicks();
+    }
+
+  unsigned int elapsed = SDL_GetTicks() - fading_start_time;
+
+  if (elapsed < 500)
+    {
+      elapsed *= 255;
+      elapsed /= 500;
+
+      gpSprite->SetColorMod(elapsed, elapsed, elapsed);
+    }
+  else
+    {
+      gpSprite->SetColorMod(255, 255, 255);
+    }
+
+  DrawBackground(false);
+
+  char buf[256];
+  sprintf(buf, "bird0_%d", (SDL_GetTicks() / 200) % 3);
+  gpSprite->Draw(gpRenderer, buf, 60, 230 + cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5);
+
+  // draw score
+  DrawScore(0);
+
+  // draw "get ready" notice
+  gpSprite->Draw(gpRenderer, "text_ready", 50, 130);
+
+  // draw hint picture
+  gpSprite->Draw(gpRenderer, "tutorial", 90, 220);
+
+  if (g_bMouseDown)
+    {
+      g_GameState = GAMESTATE_GAME;
+      gpSprite->SetColorMod(255, 255, 255);
+      fading_start_time = 0;
+      g_iScore = 0;
+    }
+}
+
 static void GameThink_Game()
 {
 }
 
-static void GameThink_Score()
+static void GameThink_GameOver()
 {
 }
 
 int GameMain()
 {
+  srand(time(NULL));
+
   gpSprite = new CSprite(gpRenderer, "res/atlas.png", "res/atlas.txt");
 
   atexit([](void) { delete gpSprite; });
@@ -182,12 +291,16 @@ int GameMain()
 	  GameThink_Initial();
 	  break;
 
+	case GAMESTATE_GAMESTART:
+	  GameThink_GameStart();
+	  break;
+
 	case GAMESTATE_GAME:
 	  GameThink_Game();
 	  break;
 
-	case GAMESTATE_SCORE:
-	  GameThink_Score();
+	case GAMESTATE_GAMEOVER:
+	  GameThink_GameOver();
 	  break;
 
 	default:
