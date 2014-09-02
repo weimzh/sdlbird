@@ -30,10 +30,15 @@ static int g_iScore = 0;
 static float g_flBirdVelocity = 0;
 static float g_flBirdHeight = 0;
 static float g_flBirdAngle = 0;
+static int g_iPipePosX[3] = { 0, 0, 0 };
+static int g_iPipePosY[3] = { 0, 0, 0 };
 
 #define GRAVITY      0.0002f
 #define WINGPOWER    0.15f
 #define ROTATION     0.07f
+#define PIPEDISTANCE 180
+#define PIPEWIDTH    50
+#define BIRDWIDTH    30
 
 static void UpdateEvents()
 {
@@ -102,10 +107,13 @@ static void ShowTitle()
   SDL_DestroyTexture(pTextureTitle);
 }
 
-static void DrawBackground(bool bStatic)
+static void DrawBackground()
 {
   gpSprite->Draw(gpRenderer, g_bNight ? "bg_night" : "bg_day", 0, 0);
+}
 
+static void DrawLand(bool bStatic)
+{
   static unsigned int time = 0;
   if (!bStatic)
     {
@@ -157,7 +165,7 @@ static void DrawScore(int score)
       
       iReverseScore /= 10;
       iScoreLen--;
-    } while (iReverseScore > 0);
+    } while (iScoreLen > 0);
 }
 
 static void GameThink_Initial()
@@ -176,6 +184,11 @@ static void GameThink_Initial()
 	  fading_start_time = 0;
 	  g_bNight = ((rand() % 2) == 1);
 	  g_iBirdPic = rand() % 3;
+	  for (int i = 0; i < 3; i++)
+	    {
+	      g_iPipePosX[i] = SCREEN_WIDTH + 200 + i * PIPEDISTANCE;
+	      g_iPipePosY[i] = rand() % 200;
+	    }
 	  return;
 	}
 
@@ -187,7 +200,8 @@ static void GameThink_Initial()
       gpSprite->SetColorMod(elapsed, elapsed, elapsed);
     }
 
-  DrawBackground(false);
+  DrawBackground();
+  DrawLand(false);
 
   gpSprite->Draw(gpRenderer, "title", 55, 110);
 
@@ -247,7 +261,8 @@ static void GameThink_GameStart()
       gpSprite->SetColorMod(255, 255, 255);
     }
 
-  DrawBackground(false);
+  DrawBackground();
+  DrawLand(false);
 
   char buf[256];
   sprintf(buf, "bird%d_%d", g_iBirdPic, (SDL_GetTicks() / 200) % 3);
@@ -277,6 +292,11 @@ static void GameThink_Game()
 {
   static bool bPrevMouseDown = false;
   bool bGameOver = false;
+	
+  static bool bPrevInRange = false;
+
+  static unsigned int time = 0;
+  int i;
 
   g_flBirdHeight -= g_flBirdVelocity;
   g_flBirdVelocity -= GRAVITY;
@@ -298,12 +318,71 @@ static void GameThink_Game()
       bGameOver = true;
     }
 
-  DrawBackground(false);
-  DrawScore(g_iScore);
+  DrawBackground();
 
+  // move pipes
+  time++;
+  if (time % 20 == 0)
+    {
+      for (i = 0; i < 3; i++)
+	{
+	  g_iPipePosX[i]--;
+	}
+
+      if (g_iPipePosX[0] < -PIPEWIDTH)
+	{
+	  g_iPipePosX[0] = g_iPipePosX[1];
+	  g_iPipePosX[1] = g_iPipePosX[2];
+	  g_iPipePosX[2] = g_iPipePosX[1] + PIPEDISTANCE;
+
+	  g_iPipePosY[0] = g_iPipePosY[1];
+	  g_iPipePosY[1] = g_iPipePosY[2];
+	  g_iPipePosY[2] = rand() % 200;
+	}
+    }
+
+  // draw pipes
+  for (i = 0; i < 3; i++)
+    {
+      gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 50 + g_iPipePosY[i]);
+      gpSprite->Draw(gpRenderer, "pipe_up", g_iPipePosX[i], SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[i]);
+    }
+
+  DrawScore(g_iScore);
+  DrawLand(false);
+
+  // draw bird
   char buf[256];
   sprintf(buf, "bird%d_%d", g_iBirdPic, (SDL_GetTicks() / 200) % 3);
   gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
+
+  // check if bird is in the range of a pipe
+  if (g_iPipePosX[0] < 60 + BIRDWIDTH && g_iPipePosX[0] > 60 - PIPEWIDTH)
+    {
+      if (!bPrevInRange)
+	{
+	  g_iScore++;
+	  //PlaySound(SCORE);
+	}
+
+      bPrevInRange = true;
+
+      // check if the bird hits the pipe
+      if (g_flBirdHeight < 50 + g_iPipePosY[0] ||
+	  g_flBirdHeight > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
+	{
+	  bGameOver = true;
+	}
+    }
+  else
+    {
+      bPrevInRange = false;
+    }
+
+  if (bGameOver)
+    {
+
+    }
 
   if (g_bMouseDown && !bPrevMouseDown)
     {
