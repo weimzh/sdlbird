@@ -78,7 +78,7 @@ static void UpdateEvents()
 
 static void ShowTitle()
 {
-  SDL_Surface *pSurfaceTitle = SDL_LoadBMP("res/splash.png");
+  SDL_Surface *pSurfaceTitle = SDL_LoadBMP("res/splash.bmp");
   if (pSurfaceTitle == NULL)
     {
       fprintf(stderr, "cannot load res/splash.bmp\n");
