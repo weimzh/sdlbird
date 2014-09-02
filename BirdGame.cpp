@@ -33,10 +33,10 @@ static float g_flBirdAngle = 0;
 static int g_iPipePosX[3] = { 0, 0, 0 };
 static int g_iPipePosY[3] = { 0, 0, 0 };
 
-#define GRAVITY      0.00015f
-#define WINGPOWER    0.1f
-#define ROTATION     0.07f
-#define PIPEDISTANCE 180
+#define GRAVITY      0.72f
+#define WINGPOWER    7.2f
+#define ROTATION     2.7f
+#define PIPEDISTANCE 150
 #define PIPEWIDTH    50
 #define BIRDWIDTH    30
 #define BIRDMARGIN   10
@@ -121,8 +121,8 @@ static void DrawLand(bool bStatic)
       time++;
     }
 
-  gpSprite->Draw(gpRenderer, "land", -(int)((time / 20) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
-  gpSprite->Draw(gpRenderer, "land", 287 - ((time / 20) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", -(int)((time * 2) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", 287 - ((time * 2) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
 }
 
 static void DrawScore(int score)
@@ -296,7 +296,6 @@ static void GameThink_Game()
 	
   static bool bPrevInRange = false;
 
-  static unsigned int time = 0;
   int i;
 
   g_flBirdHeight -= g_flBirdVelocity;
@@ -322,24 +321,20 @@ static void GameThink_Game()
   DrawBackground();
 
   // move pipes
-  time++;
-  if (time % 20 == 0)
+  for (i = 0; i < 3; i++)
     {
-      for (i = 0; i < 3; i++)
-	{
-	  g_iPipePosX[i]--;
-	}
+      g_iPipePosX[i] -= 2;
+    }
 
-      if (g_iPipePosX[0] < -PIPEWIDTH)
-	{
-	  g_iPipePosX[0] = g_iPipePosX[1];
-	  g_iPipePosX[1] = g_iPipePosX[2];
-	  g_iPipePosX[2] = g_iPipePosX[1] + PIPEDISTANCE;
+  if (g_iPipePosX[0] < -PIPEWIDTH)
+    {
+      g_iPipePosX[0] = g_iPipePosX[1];
+      g_iPipePosX[1] = g_iPipePosX[2];
+      g_iPipePosX[2] = g_iPipePosX[1] + PIPEDISTANCE;
 
-	  g_iPipePosY[0] = g_iPipePosY[1];
-	  g_iPipePosY[1] = g_iPipePosY[2];
-	  g_iPipePosY[2] = rand() % 200;
-	}
+      g_iPipePosY[0] = g_iPipePosY[1];
+      g_iPipePosY[1] = g_iPipePosY[2];
+      g_iPipePosY[2] = rand() % 200;
     }
 
   // draw pipes
@@ -360,13 +355,12 @@ static void GameThink_Game()
   // check if bird is in the range of a pipe
   if (g_iPipePosX[0] < 60 + BIRDWIDTH && g_iPipePosX[0] + PIPEWIDTH > 60 + BIRDMARGIN)
     {
-      if (!bPrevInRange)
+      if (!bPrevInRange && g_iPipePosX[0] + PIPEWIDTH / 2 < 60 + BIRDMARGIN)
 	{
 	  g_iScore++;
 	  //PlaySound(SCORE);
+	  bPrevInRange = true;
 	}
-
-      bPrevInRange = true;
 
       // check if the bird hits the pipe
       if (g_flBirdHeight + BIRDMARGIN < 60 + g_iPipePosY[0] ||
@@ -398,6 +392,68 @@ static void GameThink_Game()
 
 static void GameThink_GameOver()
 {
+  static enum { FLASH, DROP } gameoverState = FLASH;
+  static int time = 0;
+
+  if (gameoverState == FLASH)
+    {
+      SDL_Surface *surface = SDL_CreateRGBSurface(0, 1, 1, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+      SDL_FillRect(surface, NULL, 0xFFFFFFFF);
+
+      SDL_Texture *texture = SDL_CreateTextureFromSurface(gpRenderer, surface);
+      SDL_FreeSurface(surface);
+
+      SDL_RenderCopy(gpRenderer, texture, NULL, NULL);
+      SDL_DestroyTexture(texture);
+
+      if (time == 0)
+	{
+	  //PlaySound();
+	}
+      else if (time > 2)
+	{
+	  gameoverState = DROP;
+	  time = 0;
+	}
+      time++;
+    }
+  else if (gameoverState == DROP)
+    {
+      if (g_flBirdHeight < SCREEN_HEIGHT - 150 || !time)
+	{
+	  g_flBirdAngle = 85;
+	  g_flBirdHeight += 8;
+
+	  if (g_flBirdHeight > SCREEN_HEIGHT - 150)
+	    {
+	      g_flBirdHeight = SCREEN_HEIGHT - 150;
+	    }
+
+	  DrawBackground();
+
+	  // draw pipes
+	  for (int i = 0; i < 3; i++)
+	    {
+	      gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 60 + g_iPipePosY[i]);
+	      gpSprite->Draw(gpRenderer, "pipe_up", g_iPipePosX[i], SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[i]);
+	    }
+
+	  DrawLand(true);
+
+	  // draw bird
+	  char buf[256];
+	  sprintf(buf, "bird%d_%d", g_iBirdPic, (SDL_GetTicks() / 200) % 3);
+	  gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
+
+	  DrawScore(g_iScore);
+	  time = 1;
+	}
+      else
+	{
+	  //gameoverState =
+	  time = 0;
+	}
+    }
 }
 
 int GameMain()
@@ -416,8 +472,9 @@ int GameMain()
 
   while (1)
     {
-      // 10fps should be enough for a crappy game like this
-      SDL_Delay(std::max<int>((int)((1000 / 10) - (SDL_GetTicks() - uiCurrentTime)), 0));
+      // 60fps
+      SDL_Delay(std::max<int>((int)((1000 / 60) - (SDL_GetTicks() - uiCurrentTime)), 1));
+      uiCurrentTime = SDL_GetTicks();
       UpdateEvents();
 
       switch (g_GameState)
