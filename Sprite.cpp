@@ -64,26 +64,26 @@ void CSprite::Draw(SDL_Renderer *pRenderer, const char *szTag, int x, int y)
 
 void CSprite::DrawEx(SDL_Renderer *pRenderer, const char *szTag, int x, int y, double angle, SDL_RendererFlip flip)
 {
-	unsigned int uiTag = CalcTag(szTag);
+  unsigned int uiTag = CalcTag(szTag);
 
-	std::map<unsigned int, SpritePart_t>::iterator it = m_mapSpriteParts.find(uiTag);
+  std::map<unsigned int, SpritePart_t>::iterator it = m_mapSpriteParts.find(uiTag);
 
-	if (it != m_mapSpriteParts.end())
-	{
-		SDL_Rect srcrect, dstrect;
+  if (it != m_mapSpriteParts.end())
+    {
+      SDL_Rect srcrect, dstrect;
 
-		srcrect.x = it->second.X;
-		srcrect.y = it->second.Y;
-		srcrect.w = it->second.usWidth;
-		srcrect.h = it->second.usHeight;
+      srcrect.x = it->second.X;
+      srcrect.y = it->second.Y;
+      srcrect.w = it->second.usWidth;
+      srcrect.h = it->second.usHeight;
 
-		dstrect.x = x;
-		dstrect.y = y;
-		dstrect.w = it->second.usWidth;
-		dstrect.h = it->second.usHeight;
+      dstrect.x = x;
+      dstrect.y = y;
+      dstrect.w = it->second.usWidth;
+      dstrect.h = it->second.usHeight;
 
-		SDL_RenderCopyEx(pRenderer, m_pTexture, &srcrect, &dstrect, angle, NULL, flip);
-	}
+      SDL_RenderCopyEx(pRenderer, m_pTexture, &srcrect, &dstrect, angle, NULL, flip);
+    }
 }
 
 void CSprite::Load(SDL_Renderer *pRenderer, const char *szImageFileName, const char *szTxtFileName)

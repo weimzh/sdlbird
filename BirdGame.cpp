@@ -345,7 +345,7 @@ static void GameThink_Game()
   // draw pipes
   for (i = 0; i < 3; i++)
     {
-      gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 50 + g_iPipePosY[i]);
+      gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 60 + g_iPipePosY[i]);
       gpSprite->Draw(gpRenderer, "pipe_up", g_iPipePosX[i], SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[i]);
     }
 
@@ -369,7 +369,7 @@ static void GameThink_Game()
       bPrevInRange = true;
 
       // check if the bird hits the pipe
-      if (g_flBirdHeight + BIRDMARGIN < 50 + g_iPipePosY[0] ||
+      if (g_flBirdHeight + BIRDMARGIN < 60 + g_iPipePosY[0] ||
 	  g_flBirdHeight + BIRDMARGIN + BIRDWIDTH > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
 	{
 	  bGameOver = true;
