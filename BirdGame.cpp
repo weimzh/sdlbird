@@ -33,12 +33,13 @@ static float g_flBirdAngle = 0;
 static int g_iPipePosX[3] = { 0, 0, 0 };
 static int g_iPipePosY[3] = { 0, 0, 0 };
 
-#define GRAVITY      0.0002f
-#define WINGPOWER    0.15f
+#define GRAVITY      0.00015f
+#define WINGPOWER    0.1f
 #define ROTATION     0.07f
 #define PIPEDISTANCE 180
 #define PIPEWIDTH    50
 #define BIRDWIDTH    30
+#define BIRDMARGIN   10
 
 static void UpdateEvents()
 {
@@ -357,7 +358,7 @@ static void GameThink_Game()
   gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
 
   // check if bird is in the range of a pipe
-  if (g_iPipePosX[0] < 60 + BIRDWIDTH && g_iPipePosX[0] > 60 - PIPEWIDTH)
+  if (g_iPipePosX[0] < 60 + BIRDWIDTH && g_iPipePosX[0] + PIPEWIDTH > 60 + BIRDMARGIN)
     {
       if (!bPrevInRange)
 	{
@@ -368,8 +369,8 @@ static void GameThink_Game()
       bPrevInRange = true;
 
       // check if the bird hits the pipe
-      if (g_flBirdHeight < 50 + g_iPipePosY[0] ||
-	  g_flBirdHeight > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
+      if (g_flBirdHeight + BIRDMARGIN < 50 + g_iPipePosY[0] ||
+	  g_flBirdHeight + BIRDMARGIN + BIRDWIDTH > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
 	{
 	  bGameOver = true;
 	}
@@ -381,7 +382,10 @@ static void GameThink_Game()
 
   if (bGameOver)
     {
-
+      bPrevMouseDown = false;
+      bPrevInRange = false;
+      g_GameState = GAMESTATE_GAMEOVER;
+      return;
     }
 
   if (g_bMouseDown && !bPrevMouseDown)
