@@ -27,8 +27,13 @@ static int g_iBirdPic = 0;
 static int g_iMouseX = 0;
 static int g_iMouseY = 0;
 static int g_iScore = 0;
-static int g_iBirdVelocity = 0;
-static int g_iBirdHeight = 0;
+static float g_flBirdVelocity = 0;
+static float g_flBirdHeight = 0;
+static float g_flBirdAngle = 0;
+
+#define GRAVITY      0.0002f
+#define WINGPOWER    0.15f
+#define ROTATION     0.07f
 
 static void UpdateEvents()
 {
@@ -105,8 +110,8 @@ static void DrawBackground(bool bStatic)
       time++;
     }
 
-  gpSprite->Draw(gpRenderer, "land", -(int)(time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
-  gpSprite->Draw(gpRenderer, "land", 287 - (time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", -(int)((time / 20) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", 287 - ((time / 20) % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
 }
 
 static void DrawScore(int score)
@@ -210,6 +215,13 @@ static void GameThink_Initial()
     }
 }
 
+static void BirdFly()
+{
+  g_flBirdVelocity = WINGPOWER;
+  g_flBirdAngle = -45;
+  //PlaySound();
+}
+
 static void GameThink_GameStart()
 {
   static unsigned int fading_start_time = 0;
@@ -236,8 +248,9 @@ static void GameThink_GameStart()
   DrawBackground(false);
 
   char buf[256];
-  sprintf(buf, "bird0_%d", (SDL_GetTicks() / 200) % 3);
-  gpSprite->Draw(gpRenderer, buf, 60, 230 + (int)(cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5));
+  sprintf(buf, "bird%d_%d", g_iBirdPic, (SDL_GetTicks() / 200) % 3);
+  g_flBirdHeight = 230 + (float)(cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5);
+  gpSprite->Draw(gpRenderer, buf, 60, (int)g_flBirdHeight);
 
   // draw score
   DrawScore(0);
@@ -254,11 +267,48 @@ static void GameThink_GameStart()
       gpSprite->SetColorMod(255, 255, 255);
       fading_start_time = 0;
       g_iScore = 0;
+      BirdFly();
     }
 }
 
 static void GameThink_Game()
 {
+  static bool bPrevMouseDown = false;
+  bool bGameOver = false;
+
+  g_flBirdHeight -= g_flBirdVelocity;
+  g_flBirdVelocity -= GRAVITY;
+
+  g_flBirdAngle += ROTATION;
+  if (g_flBirdAngle > 85)
+    {
+      g_flBirdAngle = 85;
+    }
+
+  if (g_flBirdHeight < -50)
+    {
+      g_flBirdHeight = -50;
+    }
+  else if (g_flBirdHeight > SCREEN_HEIGHT - 150)
+    {
+      // bird has hit the ground
+      g_flBirdHeight = SCREEN_HEIGHT - 150;
+      bGameOver = true;
+    }
+
+  DrawBackground(false);
+  DrawScore(g_iScore);
+
+  char buf[256];
+  sprintf(buf, "bird%d_%d", g_iBirdPic, (SDL_GetTicks() / 200) % 3);
+  gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
+
+  if (g_bMouseDown && !bPrevMouseDown)
+    {
+      BirdFly();
+    }
+
+  bPrevMouseDown = g_bMouseDown;
 }
 
 static void GameThink_GameOver()
