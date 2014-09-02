@@ -2,7 +2,6 @@
 #define _SPRITE_H_
 
 #include <SDL.h>
-#include <SDL_image.h>
 
 #include <map>
 
