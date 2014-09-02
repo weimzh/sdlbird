@@ -119,8 +119,8 @@ bool CSprite::LoadTxt(const char *szTxtFileName)
 
       spritePart.usWidth = w;
       spritePart.usHeight = h;
-      spritePart.X = m_iTextureWidth * x1;
-      spritePart.Y = m_iTextureHeight * y1;
+      spritePart.X = (unsigned short)(m_iTextureWidth * x1);
+      spritePart.Y = (unsigned short)(m_iTextureHeight * y1);
 
       unsigned int uiTag = CalcTag(name);
 

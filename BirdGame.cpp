@@ -1,5 +1,5 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "BirdGame.h"
 #include "Sprite.h"
@@ -105,7 +105,7 @@ static void DrawBackground(bool bStatic)
       time++;
     }
 
-  gpSprite->Draw(gpRenderer, "land", -(time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
+  gpSprite->Draw(gpRenderer, "land", -(int)(time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
   gpSprite->Draw(gpRenderer, "land", 287 - (time % SCREEN_WIDTH), SCREEN_HEIGHT - 110);
 }
 
@@ -186,7 +186,7 @@ static void GameThink_Initial()
 
   char buf[256];
   sprintf(buf, "bird0_%d", (SDL_GetTicks() / 200) % 3);
-  gpSprite->Draw(gpRenderer, buf, 118, 180 + cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5);
+  gpSprite->Draw(gpRenderer, buf, 118, 180 + (int)(cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5));
 
   gpSprite->Draw(gpRenderer, "button_rate", 105, 275);
   gpSprite->Draw(gpRenderer, "button_play", 25, 340);
@@ -237,7 +237,7 @@ static void GameThink_GameStart()
 
   char buf[256];
   sprintf(buf, "bird0_%d", (SDL_GetTicks() / 200) % 3);
-  gpSprite->Draw(gpRenderer, buf, 60, 230 + cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5);
+  gpSprite->Draw(gpRenderer, buf, 60, 230 + (int)(cos(SDL_GetTicks() / 2 * 3.14 / 180) * 5));
 
   // draw score
   DrawScore(0);
@@ -267,7 +267,7 @@ static void GameThink_GameOver()
 
 int GameMain()
 {
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
 
   gpSprite = new CSprite(gpRenderer, "res/atlas.png", "res/atlas.txt");
 
