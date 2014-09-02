@@ -27,19 +27,20 @@ static int g_iBirdPic = 0;
 static int g_iMouseX = 0;
 static int g_iMouseY = 0;
 static int g_iScore = 0;
+static int g_iHighScore = 0;
 static float g_flBirdVelocity = 0;
 static float g_flBirdHeight = 0;
 static float g_flBirdAngle = 0;
 static int g_iPipePosX[3] = { 0, 0, 0 };
 static int g_iPipePosY[3] = { 0, 0, 0 };
 
-#define GRAVITY      0.72f
-#define WINGPOWER    7.2f
+#define GRAVITY      0.32f
+#define WINGPOWER    5.2f
 #define ROTATION     2.7f
 #define PIPEDISTANCE 150
 #define PIPEWIDTH    50
-#define BIRDWIDTH    30
-#define BIRDMARGIN   10
+#define BIRDWIDTH    48
+#define BIRDMARGIN   12
 
 static void UpdateEvents()
 {
@@ -164,6 +165,35 @@ static void DrawScore(int score)
 	  iBeginX += 24 + 2;
 	}
       
+      iReverseScore /= 10;
+      iScoreLen--;
+    } while (iScoreLen > 0);
+}
+
+static void DrawScoreOnBoard(int score, int x, int y)
+{
+  int iScoreLen = 0;
+  int iBeginX = x;
+  int iReverseScore = 0;
+
+  do
+    {
+      iBeginX -= 16;
+      iReverseScore *= 10;
+      iReverseScore += score % 10;
+
+      score /= 10;
+      iScoreLen++;
+    } while (score > 0);
+
+  do
+    {
+      char buf[256];
+      sprintf(buf, "number_score_%.2d", iReverseScore % 10);
+
+      gpSprite->Draw(gpRenderer, buf, iBeginX, y);
+      iBeginX += 16;
+
       iReverseScore /= 10;
       iScoreLen--;
     } while (iScoreLen > 0);
@@ -353,7 +383,7 @@ static void GameThink_Game()
   gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
 
   // check if bird is in the range of a pipe
-  if (g_iPipePosX[0] < 60 + BIRDWIDTH && g_iPipePosX[0] + PIPEWIDTH > 60 + BIRDMARGIN)
+  if (g_iPipePosX[0] < 60 + BIRDWIDTH - BIRDMARGIN && g_iPipePosX[0] + PIPEWIDTH > 60 + BIRDMARGIN)
     {
       if (!bPrevInRange && g_iPipePosX[0] + PIPEWIDTH / 2 < 60 + BIRDMARGIN)
 	{
@@ -364,7 +394,7 @@ static void GameThink_Game()
 
       // check if the bird hits the pipe
       if (g_flBirdHeight + BIRDMARGIN < 60 + g_iPipePosY[0] ||
-	  g_flBirdHeight + BIRDMARGIN + BIRDWIDTH > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
+	  g_flBirdHeight + BIRDWIDTH - BIRDMARGIN > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
 	{
 	  bGameOver = true;
 	}
@@ -392,8 +422,10 @@ static void GameThink_Game()
 
 static void GameThink_GameOver()
 {
-  static enum { FLASH, DROP } gameoverState = FLASH;
+  static enum { FLASH, DROP, SHOWTITLE, SHOWSCORE } gameoverState = FLASH;
   static int time = 0;
+  static bool bIsHighscore = false;
+  static int fading_start_time = 0;
 
   if (gameoverState == FLASH)
     {
@@ -450,9 +482,167 @@ static void GameThink_GameOver()
 	}
       else
 	{
-	  //gameoverState =
+	  gameoverState = SHOWTITLE;
 	  time = 0;
 	}
+    }
+  else if (gameoverState == SHOWTITLE)
+    {
+      DrawBackground();
+
+      // draw pipes
+      for (int i = 0; i < 3; i++)
+	{
+	  gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 60 + g_iPipePosY[i]);
+	  gpSprite->Draw(gpRenderer, "pipe_up", g_iPipePosX[i], SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[i]);
+	}
+
+      DrawLand(true);
+
+      // draw bird
+      char buf[256];
+      sprintf(buf, "bird%d_0", g_iBirdPic);
+      gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
+
+      if (time > 15)
+	{
+	  if (time < 15 + 5)
+	    {
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 110 - (time - 15) * 6);
+	      time++;
+	    }
+	  else if (time < 15 + 15)
+	    {
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + (time - 15) * 3);
+	      time++;
+	    }
+	  else if (time < 15 + 25)
+	    {
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + 15 * 3);
+	      time++;
+	    }
+	  else
+	    {
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + 15 * 3);
+	      gameoverState = SHOWSCORE;
+	      time = 0;
+
+	      if (g_iScore > g_iHighScore)
+		{
+		  g_iHighScore = g_iScore;
+		  bIsHighscore = true;
+		}
+	    }
+	}
+      else
+	{
+	  DrawScore(g_iScore);
+	  time++;
+	}
+    }
+  else if (gameoverState == SHOWSCORE)
+    {
+      if (fading_start_time > 0)
+	{
+	  unsigned int elapsed = SDL_GetTicks() - fading_start_time;
+
+	  if (elapsed > 500)
+	    {
+	      g_GameState = GAMESTATE_GAMESTART;
+	      gpSprite->SetColorMod(255, 255, 255);
+	      fading_start_time = 0;
+	      gameoverState = FLASH;
+	      time = 0;
+	      bIsHighscore = false;
+	      g_bNight = ((rand() % 2) == 1);
+	      g_iBirdPic = rand() % 3;
+	      for (int i = 0; i < 3; i++)
+		{
+		  g_iPipePosX[i] = SCREEN_WIDTH + 200 + i * PIPEDISTANCE;
+		  g_iPipePosY[i] = rand() % 200;
+		}
+	      return;
+	    }
+
+	  elapsed *= 255;
+	  elapsed /= 500;
+
+	  elapsed = 255 - elapsed;
+
+	  gpSprite->SetColorMod(elapsed, elapsed, elapsed);
+	}
+
+      DrawBackground();
+
+      // draw pipes
+      for (int i = 0; i < 3; i++)
+	{
+	  gpSprite->Draw(gpRenderer, "pipe_down", g_iPipePosX[i], -320 + 60 + g_iPipePosY[i]);
+	  gpSprite->Draw(gpRenderer, "pipe_up", g_iPipePosX[i], SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[i]);
+	}
+
+      DrawLand(true);
+
+      // draw bird
+      char buf[256];
+      sprintf(buf, "bird%d_0", g_iBirdPic);
+      gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
+
+      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + 15 * 3);
+
+      if (time < 15)
+	{
+	  gpSprite->Draw(gpRenderer, "score_panel", 31, 190 + (15 - time) * 20);
+	}
+      else
+	{
+	  gpSprite->Draw(gpRenderer, "score_panel", 31, 190);
+	  DrawScoreOnBoard(std::min<int>(g_iScore, (time - 15) / 8), 240, 225);
+	  DrawScoreOnBoard(g_iHighScore, 240, 265);
+
+	  if (bIsHighscore)
+	    {
+	      gpSprite->Draw(gpRenderer, "new", 170, 250);
+	    }
+
+	  if (g_iScore >= 40)
+	    {
+	      gpSprite->Draw(gpRenderer, "medals_0", 62, 235);
+	    }
+	  else if (g_iScore >= 30)
+	    {
+	      gpSprite->Draw(gpRenderer, "medals_1", 62, 235);
+	    }
+	  else if (g_iScore >= 20)
+	    {
+	      gpSprite->Draw(gpRenderer, "medals_2", 62, 235);
+	    }
+	  else if (g_iScore >= 10)
+	    {
+	      gpSprite->Draw(gpRenderer, "medals_3", 62, 235);
+	    }
+		  
+
+	  gpSprite->Draw(gpRenderer, "button_play", 30, 340);
+	  gpSprite->Draw(gpRenderer, "button_score", 150, 340);
+
+	  if (fading_start_time == 0 && g_bMouseDown)
+	    {
+	      if (g_iMouseX > 30 && g_iMouseY > 340 && g_iMouseX < 30 + 100 && g_iMouseY < 340 + 55)
+		{
+		  // user clicked "play" button
+		  fading_start_time = SDL_GetTicks();
+		}
+	      else if (g_iMouseX > 150 && g_iMouseY > 340 && g_iMouseX < 150 + 100 && g_iMouseY < 340 + 55)
+		{
+		  // user clicked "score" button
+		  // TODO
+		}
+	    }
+
+	}
+
+      time++;
     }
 }
 
