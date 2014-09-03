@@ -746,6 +746,7 @@ int GameMain()
   LoadWav();
 
   atexit(FreeWav);
+  atexit(SOUND_CloseAudio);
 
   ShowTitle();
 

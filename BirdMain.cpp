@@ -58,7 +58,5 @@ int main(int argc, char *argv[])
       return 255;
     }
 
-  atexit(SOUND_CloseAudio);
-
   return GameMain();
 }
