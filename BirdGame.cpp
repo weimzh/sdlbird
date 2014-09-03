@@ -1,8 +1,38 @@
+/*
+ * Copyright (c) 2014, Wei Mingzhi <whistler_wmz@users.sf.net>.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author and contributors may not be used to endorse
+ *    or promote products derived from this software without specific prior
+ *    written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL WASABI SYSTEMS, INC
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include <SDL.h>
 
 #include "BirdGame.h"
 #include "Sprite.h"
 #include "Video.h"
+#include "Audio.h"
 
 #include <algorithm>
 #include <math.h>
@@ -33,6 +63,12 @@ static float g_flBirdAngle = 0;
 static int g_iPipePosX[3] = { 0, 0, 0 };
 static int g_iPipePosY[3] = { 0, 0, 0 };
 
+static void *g_pSfxDie = NULL;
+static void *g_pSfxHit = NULL;
+static void *g_pSfxPoint = NULL;
+static void *g_pSfxSwooshing = NULL;
+static void *g_pSfxWing = NULL;
+
 #define GRAVITY      0.32f
 #define WINGPOWER    5.2f
 #define ROTATION     2.7f
@@ -40,6 +76,44 @@ static int g_iPipePosY[3] = { 0, 0, 0 };
 #define PIPEWIDTH    50
 #define BIRDWIDTH    48
 #define BIRDMARGIN   12
+
+static void LoadWav()
+{
+	g_pSfxDie = SOUND_LoadWAV("res/sfx_die.wav");
+	g_pSfxHit = SOUND_LoadWAV("res/sfx_hit.wav");
+	g_pSfxPoint = SOUND_LoadWAV("res/sfx_point.wav");
+	g_pSfxSwooshing = SOUND_LoadWAV("res/sfx_swooshing.wav");
+	g_pSfxWing = SOUND_LoadWAV("res/sfx_wing.wav");
+}
+
+static void FreeWav()
+{
+	if (g_pSfxDie != NULL)
+	{
+		SOUND_FreeWAV(g_pSfxDie);
+		g_pSfxDie = NULL;
+	}
+	if (g_pSfxHit != NULL)
+	{
+		SOUND_FreeWAV(g_pSfxHit);
+		g_pSfxHit = NULL;
+	}
+	if (g_pSfxPoint != NULL)
+	{
+		SOUND_FreeWAV(g_pSfxPoint);
+		g_pSfxPoint = NULL;
+	}
+	if (g_pSfxSwooshing != NULL)
+	{
+		SOUND_FreeWAV(g_pSfxSwooshing);
+		g_pSfxSwooshing = NULL;
+	}
+	if (g_pSfxWing != NULL)
+	{
+		SOUND_FreeWAV(g_pSfxWing);
+		g_pSfxWing = NULL;
+	}
+}
 
 static void UpdateEvents()
 {
