@@ -34,6 +34,6 @@ int SOUND_OpenAudio(int freq, int channels, int samples);
 void SOUND_CloseAudio();
 void *SOUND_LoadWAV(const char *filename);
 void SOUND_FreeWAV(void *audio);
-void SOUND_PlayWAV(void *audio);
+void SOUND_PlayWAV(int channel, void *audio);
 
 #endif /* _AUDIO_H_ */

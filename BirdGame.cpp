@@ -79,40 +79,42 @@ static void *g_pSfxWing = NULL;
 
 static void LoadWav()
 {
-	g_pSfxDie = SOUND_LoadWAV("res/sfx_die.wav");
-	g_pSfxHit = SOUND_LoadWAV("res/sfx_hit.wav");
-	g_pSfxPoint = SOUND_LoadWAV("res/sfx_point.wav");
-	g_pSfxSwooshing = SOUND_LoadWAV("res/sfx_swooshing.wav");
-	g_pSfxWing = SOUND_LoadWAV("res/sfx_wing.wav");
+  g_pSfxDie = SOUND_LoadWAV("res/sfx_die.wav");
+  g_pSfxHit = SOUND_LoadWAV("res/sfx_hit.wav");
+  g_pSfxPoint = SOUND_LoadWAV("res/sfx_point.wav");
+  g_pSfxSwooshing = SOUND_LoadWAV("res/sfx_swooshing.wav");
+  g_pSfxWing = SOUND_LoadWAV("res/sfx_wing.wav");
 }
 
 static void FreeWav()
 {
-	if (g_pSfxDie != NULL)
-	{
-		SOUND_FreeWAV(g_pSfxDie);
-		g_pSfxDie = NULL;
-	}
-	if (g_pSfxHit != NULL)
-	{
-		SOUND_FreeWAV(g_pSfxHit);
-		g_pSfxHit = NULL;
-	}
-	if (g_pSfxPoint != NULL)
-	{
-		SOUND_FreeWAV(g_pSfxPoint);
-		g_pSfxPoint = NULL;
-	}
-	if (g_pSfxSwooshing != NULL)
-	{
-		SOUND_FreeWAV(g_pSfxSwooshing);
-		g_pSfxSwooshing = NULL;
-	}
-	if (g_pSfxWing != NULL)
-	{
-		SOUND_FreeWAV(g_pSfxWing);
-		g_pSfxWing = NULL;
-	}
+  SDL_PauseAudio(1);
+
+  if (g_pSfxDie != NULL)
+    {
+      SOUND_FreeWAV(g_pSfxDie);
+      g_pSfxDie = NULL;
+    }
+  if (g_pSfxHit != NULL)
+    {
+      SOUND_FreeWAV(g_pSfxHit);
+      g_pSfxHit = NULL;
+    }
+  if (g_pSfxPoint != NULL)
+    {
+      SOUND_FreeWAV(g_pSfxPoint);
+      g_pSfxPoint = NULL;
+    }
+  if (g_pSfxSwooshing != NULL)
+    {
+      SOUND_FreeWAV(g_pSfxSwooshing);
+      g_pSfxSwooshing = NULL;
+    }
+  if (g_pSfxWing != NULL)
+    {
+      SOUND_FreeWAV(g_pSfxWing);
+      g_pSfxWing = NULL;
+    }
 }
 
 static void UpdateEvents()
@@ -339,7 +341,7 @@ static void BirdFly()
 {
   g_flBirdVelocity = WINGPOWER;
   g_flBirdAngle = -45;
-  //PlaySound();
+  SOUND_PlayWAV(1, g_pSfxWing);
 }
 
 static void GameThink_GameStart()
@@ -461,7 +463,7 @@ static void GameThink_Game()
       if (!bPrevInRange && g_iPipePosX[0] + PIPEWIDTH / 2 < 60 + BIRDMARGIN)
 	{
 	  g_iScore++;
-	  //PlaySound(SCORE);
+	  SOUND_PlayWAV(0, g_pSfxPoint);
 	  bPrevInRange = true;
 	}
 
@@ -513,12 +515,13 @@ static void GameThink_GameOver()
 
       if (time == 0)
 	{
-	  //PlaySound();
+	  SOUND_PlayWAV(0, g_pSfxHit);
 	}
       else if (time > 2)
 	{
 	  gameoverState = DROP;
 	  time = 0;
+	  return;
 	}
       time++;
     }
@@ -526,6 +529,10 @@ static void GameThink_GameOver()
     {
       if (g_flBirdHeight < SCREEN_HEIGHT - 150 || !time)
 	{
+	  if (time == 20)
+	    {
+	      SOUND_PlayWAV(0, g_pSfxDie);
+	    }
 	  g_flBirdAngle = 85;
 	  g_flBirdHeight += 8;
 
@@ -551,12 +558,13 @@ static void GameThink_GameOver()
 	  gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
 
 	  DrawScore(g_iScore);
-	  time = 1;
+	  time++;
 	}
       else
 	{
 	  gameoverState = SHOWTITLE;
 	  time = 0;
+	  SOUND_PlayWAV(0, g_pSfxHit);
 	}
     }
   else if (gameoverState == SHOWTITLE)
@@ -577,19 +585,23 @@ static void GameThink_GameOver()
       sprintf(buf, "bird%d_0", g_iBirdPic);
       gpSprite->DrawEx(gpRenderer, buf, 60, (int)g_flBirdHeight, g_flBirdAngle, SDL_FLIP_NONE);
 
-      if (time > 15)
+      if (time > 30)
 	{
-	  if (time < 15 + 5)
+	  if (time < 30 + 5)
 	    {
-	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 110 - (time - 15) * 6);
+	      if (time == 30 + 1)
+		{
+		  SOUND_PlayWAV(0, g_pSfxSwooshing);
+		}
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 110 - (time - 30) * 6);
 	      time++;
 	    }
-	  else if (time < 15 + 15)
+	  else if (time < 30 + 15)
 	    {
-	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + (time - 15) * 3);
+	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + (time - 30) * 3);
 	      time++;
 	    }
-	  else if (time < 15 + 25)
+	  else if (time < 30 + 25)
 	    {
 	      gpSprite->Draw(gpRenderer, "text_game_over", 45, 80 + 15 * 3);
 	      time++;
@@ -665,6 +677,10 @@ static void GameThink_GameOver()
 
       if (time < 15)
 	{
+	  if (time == 0)
+	    {
+	      SOUND_PlayWAV(0, g_pSfxSwooshing);
+	    }
 	  gpSprite->Draw(gpRenderer, "score_panel", 31, 190 + (15 - time) * 20);
 	}
       else
@@ -726,6 +742,10 @@ int GameMain()
   gpSprite = new CSprite(gpRenderer, "res/atlas.bmp", "res/atlas.txt");
 
   atexit([](void) { delete gpSprite; });
+
+  LoadWav();
+
+  atexit(FreeWav);
 
   ShowTitle();
 

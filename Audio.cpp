@@ -35,6 +35,9 @@
 
 static int audio_len = 0;
 static unsigned char *audio_pos = NULL;
+static int audio_len2 = 0;
+static unsigned char *audio_pos2 = NULL;
+static SDL_mutex *mtx = NULL;
 static SDL_AudioSpec audio_spec;
 bool g_fAudioOpened = false;
 
@@ -45,15 +48,28 @@ static void SOUND_FillAudio(void *, unsigned char *stream, int len)
 {
   memset(stream, 0, len);
 
-  // Only play if we have data left
-  if (audio_len == 0)
-    return;
+  int len2 = len;
+
+  SDL_mutexP(mtx);
 
   // Mix as much data as possible
-  len = (len > audio_len) ? audio_len : len;
-  SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
-  audio_pos += len;
-  audio_len -= len;
+  if (audio_len > 0)
+    {
+      len = (len > audio_len) ? audio_len : len;
+      SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
+      audio_pos += len;
+      audio_len -= len;
+    }
+
+  if (audio_len2 > 0)
+    {
+      len = (len2 > audio_len2) ? audio_len2 : len2;
+      SDL_MixAudio(stream, audio_pos2, len, SDL_MIX_MAXVOLUME);
+      audio_pos2 += len;
+      audio_len2 -= len;
+    }
+
+  SDL_mutexV(mtx);
 }
 
 int SOUND_OpenAudio(int freq, int channels, int samples)
@@ -62,6 +78,8 @@ int SOUND_OpenAudio(int freq, int channels, int samples)
     {
       return 0;
     }
+
+  mtx = SDL_CreateMutex();
 
   // Set the audio format
   audio_spec.freq = freq;
@@ -98,6 +116,9 @@ void SOUND_CloseAudio()
       SDL_CloseAudio();
       g_fAudioOpened = false;
     }
+
+  SDL_DestroyMutex(mtx);
+  mtx = NULL;
 }
 
 void *SOUND_LoadWAV(const char *filename)
@@ -165,17 +186,25 @@ void SOUND_FreeWAV(void *audio)
   free(audio);
 }
 
-void SOUND_PlayWAV(void *audio)
+void SOUND_PlayWAV(int channel, void *audio)
 {
   if (audio == NULL)
     {
-      audio_pos = NULL;
-      audio_len = -1;
+      return;
     }
-  else
+
+  SDL_mutexP(mtx);
+  if (channel == 0)
     {
       audio_pos = ((SDL_AudioCVT *)audio)->buf;
       audio_len = ((SDL_AudioCVT *)audio)->len * ((SDL_AudioCVT *)audio)->len_mult;
     }
+  else
+    {
+      audio_pos2 = ((SDL_AudioCVT *)audio)->buf;
+      audio_len2 = ((SDL_AudioCVT *)audio)->len * ((SDL_AudioCVT *)audio)->len_mult;
+    }
+  SDL_mutexV(mtx);
+
   SDL_PauseAudio(0);
 }
