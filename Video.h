@@ -35,6 +35,8 @@ extern SDL_Renderer      *gpRenderer;
 
 bool VideoInit();
 void VideoDestroy();
+void FrameBegin();
+void FrameEnd();
 
 #define SCREEN_WIDTH 287
 #define SCREEN_HEIGHT 511

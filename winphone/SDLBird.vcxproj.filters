@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Assets">
+      <UniqueIdentifier>17b52f90-9b33-4188-8a0e-808582bbabbc</UniqueIdentifier>
+      <Extensions>ico;bmp;dlg;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;resw;resjson</Extensions>
+    </Filter>
+    <Filter Include="Assets\res">
+      <UniqueIdentifier>{b92e17f5-b5dd-48b2-924f-59695abbed55}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\ApplicationIcon.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\AlignmentGrid.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tiles\FlipCycleTileLarge.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tiles\FlipCycleTileMedium.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tiles\FlipCycleTileSmall.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tiles\IconicTileMediumLarge.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Tiles\IconicTileSmall.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="..\res\atlas.bmp">
+      <Filter>Assets\res</Filter>
+    </Image>
+    <Image Include="..\res\splash.bmp">
+      <Filter>Assets\res</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="WMAppManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SDL2\src\main\winrt\SDL_winrt_main_NonXAML.cpp" />
+    <ClCompile Include="WinPhoneUtil.cpp" />
+    <ClCompile Include="..\Audio.cpp" />
+    <ClCompile Include="..\BirdGame.cpp" />
+    <ClCompile Include="..\BirdMain.cpp" />
+    <ClCompile Include="..\Sprite.cpp" />
+    <ClCompile Include="..\Video.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\res\atlas.txt">
+      <Filter>Assets\res</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="..\res\sfx_die.wav">
+      <Filter>Assets\res</Filter>
+    </Media>
+    <Media Include="..\res\sfx_hit.wav">
+      <Filter>Assets\res</Filter>
+    </Media>
+    <Media Include="..\res\sfx_point.wav">
+      <Filter>Assets\res</Filter>
+    </Media>
+    <Media Include="..\res\sfx_swooshing.wav">
+      <Filter>Assets\res</Filter>
+    </Media>
+    <Media Include="..\res\sfx_wing.wav">
+      <Filter>Assets\res</Filter>
+    </Media>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Audio.h" />
+    <ClInclude Include="..\BirdGame.h" />
+    <ClInclude Include="..\BirdMain.h" />
+    <ClInclude Include="..\Sprite.h" />
+    <ClInclude Include="..\Video.h" />
+  </ItemGroup>
+</Project>

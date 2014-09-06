@@ -33,6 +33,7 @@
 
 SDL_Window        *gpWindow           = NULL;
 SDL_Renderer      *gpRenderer         = NULL;
+SDL_Texture       *gpTexture          = NULL;
 
 bool VideoInit()
 {
@@ -56,16 +57,32 @@ bool VideoInit()
       return false;
     }
 
-  #if defined (__IPHONEOS__)
+#if defined (__IPHONEOS__)
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
   SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 1);
-  #endif
+#endif
+
+  gpTexture = SDL_CreateTexture(gpRenderer, SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+  if (gpTexture == NULL)
+    {
+      SDL_DestroyRenderer(gpRenderer);
+      SDL_DestroyWindow(gpWindow);
+      return false;
+    }
 
   return true;
 }
 
 void VideoDestroy()
 {
+  if (gpTexture != NULL)
+    {
+      SDL_DestroyTexture(gpTexture);
+      gpTexture = NULL;
+    }
+
   if (gpRenderer != NULL)
     {
       SDL_DestroyRenderer(gpRenderer);
@@ -77,4 +94,16 @@ void VideoDestroy()
       SDL_DestroyWindow(gpWindow);
       gpWindow = NULL;
     }
+}
+
+void FrameBegin()
+{
+  SDL_SetRenderTarget(gpRenderer, gpTexture);
+}
+
+void FrameEnd()
+{
+  SDL_SetRenderTarget(gpRenderer, NULL);
+  SDL_RenderCopy(gpRenderer, gpTexture, NULL, NULL);
+  SDL_RenderPresent(gpRenderer);
 }

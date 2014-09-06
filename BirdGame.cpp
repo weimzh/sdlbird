@@ -77,13 +77,38 @@ static void *g_pSfxWing = NULL;
 #define BIRDWIDTH    48
 #define BIRDMARGIN   12
 
+#ifdef __WINPHONE__
+extern "C" const char *GetInstallPath();
+#endif
+
+static const char *MakeFileName(const char *path)
+{
+#ifdef __WINPHONE__
+  static char buf[2][4096];
+  static int current = 0;
+  current ^= 1;
+  strcpy(buf[current], GetInstallPath());
+  strcat(buf[current], "\\");
+  path += strlen(path) - 1;
+  while (*path != '/' && *path != '\\')
+    {
+      path--;
+    }
+  path++;
+  strcat(buf[current], path);
+  return buf[current];
+#else
+  return path;
+#endif
+}
+
 static void LoadWav()
 {
-  g_pSfxDie = SOUND_LoadWAV("res/sfx_die.wav");
-  g_pSfxHit = SOUND_LoadWAV("res/sfx_hit.wav");
-  g_pSfxPoint = SOUND_LoadWAV("res/sfx_point.wav");
-  g_pSfxSwooshing = SOUND_LoadWAV("res/sfx_swooshing.wav");
-  g_pSfxWing = SOUND_LoadWAV("res/sfx_wing.wav");
+  g_pSfxDie = SOUND_LoadWAV(MakeFileName("res/sfx_die.wav"));
+  g_pSfxHit = SOUND_LoadWAV(MakeFileName("res/sfx_hit.wav"));
+  g_pSfxPoint = SOUND_LoadWAV(MakeFileName("res/sfx_point.wav"));
+  g_pSfxSwooshing = SOUND_LoadWAV(MakeFileName("res/sfx_swooshing.wav"));
+  g_pSfxWing = SOUND_LoadWAV(MakeFileName("res/sfx_wing.wav"));
 }
 
 static void FreeWav()
@@ -154,7 +179,7 @@ static void UpdateEvents()
 
 static void ShowTitle()
 {
-  SDL_Surface *pSurfaceTitle = SDL_LoadBMP("res/splash.bmp");
+  SDL_Surface *pSurfaceTitle = SDL_LoadBMP(MakeFileName("res/splash.bmp"));
   if (pSurfaceTitle == NULL)
     {
       fprintf(stderr, "cannot load res/splash.bmp\n");
@@ -469,30 +494,30 @@ static void GameThink_Game()
 
       // check if the bird hits the pipe
       if (g_flBirdHeight + BIRDMARGIN < 60 + g_iPipePosY[0] ||
-	  g_flBirdHeight + BIRDWIDTH - BIRDMARGIN > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
+					g_flBirdHeight + BIRDWIDTH - BIRDMARGIN > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
 	{
 	  bGameOver = true;
 	}
-    }
+}
   else
     {
       bPrevInRange = false;
     }
 
-  if (bGameOver)
-    {
-      bPrevMouseDown = false;
-      bPrevInRange = false;
-      g_GameState = GAMESTATE_GAMEOVER;
-      return;
-    }
+if (bGameOver)
+  {
+    bPrevMouseDown = false;
+    bPrevInRange = false;
+    g_GameState = GAMESTATE_GAMEOVER;
+    return;
+  }
 
-  if (g_bMouseDown && !bPrevMouseDown)
-    {
-      BirdFly();
-    }
+if (g_bMouseDown && !bPrevMouseDown)
+  {
+    BirdFly();
+  }
 
-  bPrevMouseDown = g_bMouseDown;
+bPrevMouseDown = g_bMouseDown;
 }
 
 static void GameThink_GameOver()
@@ -738,7 +763,7 @@ int GameMain()
 {
   srand((unsigned int)time(NULL));
 
-  gpSprite = new CSprite(gpRenderer, "res/atlas.bmp", "res/atlas.txt");
+  gpSprite = new CSprite(gpRenderer, MakeFileName("res/atlas.bmp"), MakeFileName("res/atlas.txt"));
 
   atexit([](void) { delete gpSprite; });
 
@@ -772,7 +797,7 @@ int GameMain()
 	{
 	  uiNextFrameTime += 1000 / 60;
 	}
-
+      FrameBegin();
       switch (g_GameState)
 	{
 	case GAMESTATE_INITIAL:
@@ -796,7 +821,7 @@ int GameMain()
 	  exit(255);
 	}
 
-      SDL_RenderPresent(gpRenderer);
+      FrameEnd();
     }
 
   return 255; // shouldn't really reach here
