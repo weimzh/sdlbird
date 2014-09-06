@@ -99,7 +99,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
-      <PreprocessorDefinitions>PSAPI_VERSION=2;%(PreprocessorDefinitions);__WINPHONE__=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=2;%(PreprocessorDefinitions);__WINPHONE__=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir);$(IntermediateOutputPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -114,7 +114,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
-      <PreprocessorDefinitions>PSAPI_VERSION=2;%(PreprocessorDefinitions);__WINPHONE__=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PSAPI_VERSION=2;%(PreprocessorDefinitions);__WINPHONE__=1;_CRT_SECURE_NO_WARNINGS=1</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir);$(IntermediateOutputPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

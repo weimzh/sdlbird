@@ -27,19 +27,3 @@ GetInstallPath()
 	}
 	return buf;
 }
-
-extern "C" FILE *
-MY_fopen(const char *path, const char *mode)
-{
-	const char *p = GetRootPath();
-	char buf[1024];
-	_snprintf_s(buf, 1024, "%s\\%s", p, path);
-	FILE *fp = _fsopen(buf, mode, 0x40);
-	if (fp == NULL)
-	{
-		p = GetInstallPath();
-		_snprintf_s(buf, 1024, "%s\\%s", p, path);
-		fp = _fsopen(buf, mode, 0x40);
-	}
-	return fp;
-}

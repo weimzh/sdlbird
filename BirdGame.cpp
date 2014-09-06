@@ -78,28 +78,51 @@ static void *g_pSfxWing = NULL;
 #define BIRDMARGIN   12
 
 #ifdef __WINPHONE__
+extern "C" const char *GetRootPath();
 extern "C" const char *GetInstallPath();
+#define fopen(a,b) _fsopen((a), (b), 0x40)
 #endif
 
-static const char *MakeFileName(const char *path)
+static const char *MakeFileName(const char *path, bool bUserDir = false)
 {
 #ifdef __WINPHONE__
   static char buf[2][4096];
   static int current = 0;
   current ^= 1;
-  strcpy(buf[current], GetInstallPath());
+  strcpy(buf[current], bUserDir ? GetRootPath() : GetInstallPath());
   strcat(buf[current], "\\");
-  path += strlen(path) - 1;
-  while (*path != '/' && *path != '\\')
+  const char *mypath = path + strlen(path) - 1;
+  while (mypath >= path && (*mypath != '/' && *mypath != '\\'))
     {
-      path--;
+      mypath--;
     }
-  path++;
-  strcat(buf[current], path);
+  mypath++;
+  strcat(buf[current], mypath);
   return buf[current];
 #else
   return path;
 #endif
+}
+
+static void LoadBestScore()
+{
+  g_iHighScore = 0;
+  FILE *fp = fopen(MakeFileName("sdlbird.ini", true), "r");
+  if (fp != NULL)
+    {
+      fscanf(fp, "%d", &g_iHighScore);
+      fclose(fp);
+    }
+}
+
+static void SaveBestScore()
+{
+  FILE *fp = fopen(MakeFileName("sdlbird.ini", true), "w");
+  if (fp != NULL)
+    {
+      fprintf(fp, "%d", g_iHighScore);
+      fclose(fp);
+    }
 }
 
 static void LoadWav()
@@ -494,30 +517,30 @@ static void GameThink_Game()
 
       // check if the bird hits the pipe
       if (g_flBirdHeight + BIRDMARGIN < 60 + g_iPipePosY[0] ||
-					g_flBirdHeight + BIRDWIDTH - BIRDMARGIN > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
+	  g_flBirdHeight + BIRDWIDTH - BIRDMARGIN > SCREEN_HEIGHT - 110 - 250 + g_iPipePosY[0])
 	{
 	  bGameOver = true;
 	}
-}
+    }
   else
     {
       bPrevInRange = false;
     }
 
-if (bGameOver)
-  {
-    bPrevMouseDown = false;
-    bPrevInRange = false;
-    g_GameState = GAMESTATE_GAMEOVER;
-    return;
-  }
+  if (bGameOver)
+    {
+      bPrevMouseDown = false;
+      bPrevInRange = false;
+      g_GameState = GAMESTATE_GAMEOVER;
+      return;
+    }
 
-if (g_bMouseDown && !bPrevMouseDown)
-  {
-    BirdFly();
-  }
+  if (g_bMouseDown && !bPrevMouseDown)
+    {
+      BirdFly();
+    }
 
-bPrevMouseDown = g_bMouseDown;
+  bPrevMouseDown = g_bMouseDown;
 }
 
 static void GameThink_GameOver()
@@ -640,6 +663,7 @@ static void GameThink_GameOver()
 		{
 		  g_iHighScore = g_iScore;
 		  bIsHighscore = true;
+		  SaveBestScore();
 		}
 	    }
 	}
@@ -762,6 +786,7 @@ static void GameThink_GameOver()
 int GameMain()
 {
   srand((unsigned int)time(NULL));
+  LoadBestScore();
 
   gpSprite = new CSprite(gpRenderer, MakeFileName("res/atlas.bmp"), MakeFileName("res/atlas.txt"));
 
