@@ -49,6 +49,8 @@ static void SOUND_FillAudio(void *, unsigned char *stream, int len)
   memset(stream, 0, len);
 
   int len2 = len;
+  unsigned char *mix_stream1 = NULL, *mix_stream2 = NULL;
+  int mix_len1 = 0, mix_len2 = 0;
 
   SDL_mutexP(mtx);
 
@@ -56,7 +58,8 @@ static void SOUND_FillAudio(void *, unsigned char *stream, int len)
   if (audio_len > 0)
     {
       len = (len > audio_len) ? audio_len : len;
-      SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
+      mix_stream1 = audio_pos;
+      mix_len1 = len;
       audio_pos += len;
       audio_len -= len;
     }
@@ -64,12 +67,23 @@ static void SOUND_FillAudio(void *, unsigned char *stream, int len)
   if (audio_len2 > 0)
     {
       len = (len2 > audio_len2) ? audio_len2 : len2;
-      SDL_MixAudio(stream, audio_pos2, len, SDL_MIX_MAXVOLUME);
+      mix_stream2 = audio_pos2;
+      mix_len2 = len;
       audio_pos2 += len;
       audio_len2 -= len;
     }
 
   SDL_mutexV(mtx);
+
+  if (mix_stream1 != NULL)
+    {
+      SDL_MixAudio(stream, mix_stream1, mix_len1, SDL_MIX_MAXVOLUME);
+    }
+
+  if (mix_stream2 != NULL)
+    {
+      SDL_MixAudio(stream, mix_stream2, mix_len2, SDL_MIX_MAXVOLUME);
+    }
 }
 
 int SOUND_OpenAudio(int freq, int channels, int samples)
@@ -182,7 +196,7 @@ void SOUND_FreeWAV(void *audio)
     {
       return;
     }
-  SDL_FreeWAV(((SDL_AudioCVT *)audio)->buf);
+  free(((SDL_AudioCVT *)audio)->buf);
   free(audio);
 }
 

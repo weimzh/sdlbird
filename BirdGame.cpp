@@ -529,9 +529,9 @@ static void GameThink_GameOver()
     {
       if (g_flBirdHeight < SCREEN_HEIGHT - 150 || !time)
 	{
-	  if (time == 20)
+	  if (time == 15)
 	    {
-	      SOUND_PlayWAV(0, g_pSfxDie);
+	      SOUND_PlayWAV(1, g_pSfxDie);
 	    }
 	  g_flBirdAngle = 85;
 	  g_flBirdHeight += 8;
@@ -564,7 +564,6 @@ static void GameThink_GameOver()
 	{
 	  gameoverState = SHOWTITLE;
 	  time = 0;
-	  SOUND_PlayWAV(0, g_pSfxHit);
 	}
     }
   else if (gameoverState == SHOWTITLE)
@@ -752,14 +751,27 @@ int GameMain()
 
   g_GameState = GAMESTATE_INITIAL;
 
+  unsigned int uiNextFrameTime = SDL_GetTicks();
   unsigned int uiCurrentTime = SDL_GetTicks();
 
   while (1)
     {
       // 60fps
-      SDL_Delay(std::max<int>((int)((1000 / 60) - (SDL_GetTicks() - uiCurrentTime)), 1));
-      uiCurrentTime = SDL_GetTicks();
-      UpdateEvents();
+      do
+	{
+	  uiCurrentTime = SDL_GetTicks();
+	  UpdateEvents();
+	  SDL_Delay(1);
+	} while (uiCurrentTime < uiNextFrameTime);
+
+      if ((int)(uiCurrentTime - uiNextFrameTime) > 1000)
+	{
+	  uiNextFrameTime = uiCurrentTime + 1000 / 60;
+	}
+      else
+	{
+	  uiNextFrameTime += 1000 / 60;
+	}
 
       switch (g_GameState)
 	{
