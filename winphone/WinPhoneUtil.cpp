@@ -27,3 +27,8 @@ GetInstallPath()
 	}
 	return buf;
 }
+
+extern "C" void
+RateApp()
+{	
+}

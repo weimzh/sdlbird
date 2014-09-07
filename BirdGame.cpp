@@ -80,6 +80,7 @@ static void *g_pSfxWing = NULL;
 #ifdef __WINPHONE__
 extern "C" const char *GetRootPath();
 extern "C" const char *GetInstallPath();
+extern "C" void RateApp();
 #define fopen(a,b) _fsopen((a), (b), 0x40)
 #endif
 
@@ -382,6 +383,13 @@ static void GameThink_Initial()
 	  // user clicked "score" button
 	  // TODO
 	}
+	  else if (g_iMouseX > 105 && g_iMouseY > 275 && g_iMouseX < 105 + 64 && g_iMouseY < 275 + 32)
+	  {
+		  // user clicked "rate" button
+#ifdef __WINPHONE__
+		  RateApp();
+#endif
+	  }
     }
 }
 
@@ -734,7 +742,7 @@ static void GameThink_GameOver()
       else
 	{
 	  gpSprite->Draw(gpRenderer, "score_panel", 31, 190);
-	  DrawScoreOnBoard(std::min<int>(g_iScore, (time - 15) / 8), 240, 225);
+	  DrawScoreOnBoard(std::min<int>(g_iScore, (time - 15) / 2), 240, 225);
 	  DrawScoreOnBoard(g_iHighScore, 240, 265);
 
 	  if (bIsHighscore)
@@ -759,7 +767,6 @@ static void GameThink_GameOver()
 	      gpSprite->Draw(gpRenderer, "medals_3", 62, 235);
 	    }
 		  
-
 	  gpSprite->Draw(gpRenderer, "button_play", 30, 340);
 	  gpSprite->Draw(gpRenderer, "button_score", 150, 340);
 

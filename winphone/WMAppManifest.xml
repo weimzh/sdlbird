@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
   <DefaultLanguage xmlns="" code="en-US" />
   <App xmlns="" ProductID="{f59b48bc-5746-4f8b-90b2-4b09a9d94c5c}" Title="Flappy Bird" RuntimeType="Modern Native" Version="2.0.0.0" Genre="apps.normal" Author="Wei Mingzhi" Description="http://github.com/CecilHarvey/sdlbird/" Publisher="Wei Mingzhi" PublisherID="{f27682c8-453b-451e-8c75-76c006cdede4}">
     <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
     <Capabilities>
-      <Capability Name="ID_CAP_REMOVABLE_STORAGE" />
     </Capabilities>
     <Tasks>
       <DefaultTask Name="_default" ImagePath="SDLBird.exe" ImageParams="" />

@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
     }
   atexit(SDL_Quit);
 
+  SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
+
   // initialize video
   if (!VideoInit())
     {
