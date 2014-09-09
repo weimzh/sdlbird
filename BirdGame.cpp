@@ -197,6 +197,13 @@ static void UpdateEvents()
 	case SDL_FINGERUP:
 	  g_bMouseDown = false;
 	  break;
+
+	case SDL_KEYDOWN:
+	  if (evt.key.keysym.sym == SDLK_AC_BACK)
+	    {
+	      exit(0);
+	    }
+	  break;
 	}
     }
 }

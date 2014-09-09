@@ -150,22 +150,53 @@ void CSprite::Load(SDL_Renderer *pRenderer, const char *szImageFileName, const c
 
 bool CSprite::LoadTxt(const char *szTxtFileName)
 {
-  FILE *fp = fopen(szTxtFileName, "r");
+  SDL_RWops *rwops = SDL_RWFromFile(szTxtFileName, "r");
 
-  if (fp == NULL)
+  if (rwops == NULL)
     {
       return false;
     }
 
-  while (!feof(fp))
+  char *pBuf = (char *)malloc(SDL_RWsize(rwops) + 1);
+  if (pBuf == NULL)
+    {
+      SDL_RWclose(rwops);
+      return false;
+    }
+
+  SDL_RWread(rwops, pBuf, 1, SDL_RWsize(rwops));
+  pBuf[SDL_RWsize(rwops)] = '\0';
+
+  SDL_RWclose(rwops);
+
+  char *p = pBuf;
+
+  while (p != NULL && *p != '\0')
     {
       char name[256];
       int w, h;
       float x1, y1, x2, y2;
 
-      if (fscanf(fp, "%s %d %d %f %f %f %f", name, &w, &h, &x1, &y1, &x2, &y2) != 7)
+      if (sscanf(p, "%s %d %d %f %f %f %f", name, &w, &h, &x1, &y1, &x2, &y2) != 7)
 	{
+	  p = strstr(p, "\n");
+	  if (p != NULL)
+	    {
+	      while (*p == '\n')
+		{
+		  p++;
+		}
+	    }
 	  continue;
+	}
+
+      p = strstr(p, "\n");
+      if (p != NULL)
+	{
+	  while (*p == '\n')
+	    {
+	      p++;
+	    }
 	}
 
       SpritePart_t spritePart;
@@ -187,6 +218,6 @@ bool CSprite::LoadTxt(const char *szTxtFileName)
 	}
     }
 
-  fclose(fp);
+  free(pBuf);
   return true;
 }
