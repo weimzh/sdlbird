@@ -104,6 +104,7 @@ void FrameBegin()
 void FrameEnd()
 {
   SDL_SetRenderTarget(gpRenderer, NULL);
+
   SDL_RenderCopy(gpRenderer, gpTexture, NULL, NULL);
   SDL_RenderPresent(gpRenderer);
 }

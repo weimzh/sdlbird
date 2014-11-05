@@ -69,6 +69,8 @@ static void *g_pSfxPoint = NULL;
 static void *g_pSfxSwooshing = NULL;
 static void *g_pSfxWing = NULL;
 
+static bool g_bPauseGame = false;
+
 #define GRAVITY      0.32f
 #define WINGPOWER    5.2f
 #define ROTATION     2.7f
@@ -86,7 +88,7 @@ extern "C" void RateApp();
 
 static const char *MakeFileName(const char *path, bool bUserDir = false)
 {
-#ifdef __WINPHONE__
+#if defined __WINPHONE__
   static char buf[2][4096];
   static int current = 0;
   current ^= 1;
@@ -99,6 +101,25 @@ static const char *MakeFileName(const char *path, bool bUserDir = false)
     }
   mypath++;
   strcat(buf[current], mypath);
+  return buf[current];
+#elif defined __IPHONEOS__
+  static char buf[2][4096];
+  static int current = 0;
+  current ^= 1;
+  if (bUserDir)
+    {
+      char *p = SDL_GetPrefPath("", "");
+      strcpy(buf[current], p);
+      strcat(buf[current], path);
+      SDL_free(p);
+    }
+  else
+    {
+      char *p = SDL_GetBasePath();
+      strcpy(buf[current], p);
+      strcat(buf[current], "/");
+      strcat(buf[current], path);
+    }
   return buf[current];
 #else
   return path;
@@ -204,6 +225,16 @@ static void UpdateEvents()
 	      exit(0);
 	    }
 	  break;
+            
+#ifdef __IPHONEOS__
+        case SDL_APP_WILLENTERBACKGROUND:
+	  g_bPauseGame = true;
+	  break;
+            
+        case SDL_APP_DIDENTERFOREGROUND:
+	  g_bPauseGame = false;
+	  break;
+#endif
 	}
     }
 }
@@ -390,13 +421,13 @@ static void GameThink_Initial()
 	  // user clicked "score" button
 	  // TODO
 	}
-	  else if (g_iMouseX > 105 && g_iMouseY > 275 && g_iMouseX < 105 + 64 && g_iMouseY < 275 + 32)
-	  {
-		  // user clicked "rate" button
+      else if (g_iMouseX > 105 && g_iMouseY > 275 && g_iMouseX < 105 + 64 && g_iMouseY < 275 + 32)
+	{
+	  // user clicked "rate" button
 #ifdef __WINPHONE__
-		  RateApp();
+	  RateApp();
 #endif
-	  }
+	}
     }
 }
 
@@ -836,6 +867,12 @@ int GameMain()
 	{
 	  uiNextFrameTime += 1000 / 60;
 	}
+
+      if (g_bPauseGame)
+        {
+	  continue;
+        }
+
       FrameBegin();
       switch (g_GameState)
 	{
